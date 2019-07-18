@@ -7,16 +7,11 @@ import io.oaft.colorgame.util.CC;
 import io.oaft.colorgame.util.GameState;
 import io.oaft.colorgame.util.Timer;
 import io.oaft.colorgame.util.cuboid.Cuboid;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 public class GameManager extends Manager {
@@ -69,39 +64,27 @@ public class GameManager extends Manager {
 
     private void doGame() {
         this.gameState = GameState.IN_GAME;
-        this.nextBlock = new ItemStack(Material.STAINED_GLASS, 1, (short) 14);
+        this.nextBlock = new ItemStack(Material.WOOL, 1, (short) 14);
         getScheduler().runTaskTimerAsynchronously(getPlugin(), () -> {
-            if (this.gameState == GameState.IN_GAME) {
-                int i = this.newBlockTimer.getSeconds();
-                if (i >= 1) {
-                    for (Player all : Bukkit.getOnlinePlayers()) {
-                        all.getInventory().setItem(0, new ItemStack(nextBlock));
-                    }
-                    getPlugin().getServer().broadcastMessage(CC.GOLD + "New block in " + i + " seconds.");
-                } else {
-                    for (Player all : Bukkit.getOnlinePlayers()) {
-                        all.getInventory().setItem(0, null);
-                    }
-                    this.newBlockTimer.stop();
-                    for (Block block : this.cuboid) {
-                        if (block.getType() == this.nextBlock.getType()) {
-                            this.blockSet.add(block);
-                            block.setType(Material.AIR);
-                        }
-                    }
-                    if (this.nextBlock.getType() == Material.STAINED_GLASS) {
-                        this.nextBlock = new ItemStack(Material.WOOL, 1, (short) 5);
-                    } else {
-                        this.nextBlock = new ItemStack(Material.STAINED_GLASS, 1, (short) 14);
+            if(this.newBlockTimer.getSeconds() >= 1) {
+                getPlugin().getServer().broadcastMessage(CC.GOLD + "New block in " + this.newBlockTimer.getSeconds() + " seconds.");
+            } else {
+                for (Block block : this.cuboid) {
+                    if(block.getType() == nextBlock.getType()) {
+                        getScheduler().runTaskLaterAsynchronously(getPlugin(), () -> block.setType(block.getType()), 100L);
+                        block.setType(Material.AIR);
                     }
                 }
+                this.newBlockTimer.stop();
             }
         }, 0L, 20L);
         getScheduler().runTaskTimerAsynchronously(getPlugin(), () -> {
-            if (this.gameState == GameState.IN_GAME) {
-                this.newBlockTimer.setTime(6);
-                this.newBlockTimer.start();
+            if(this.nextBlock.getType() == Material.WOOL) {
+                this.nextBlock = new ItemStack(Material.STAINED_GLASS, 1, (short) 5);
+            } else {
+                this.nextBlock = new ItemStack(Material.WOOL, 1, (short) 14);
             }
+            this.newBlockTimer.start();
         }, 0L, 200L);
     }
 
