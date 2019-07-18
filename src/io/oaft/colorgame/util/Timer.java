@@ -51,4 +51,8 @@ public class Timer {
         return time % 60;
     }
 
+    public void setTime(int time) {
+        this.time = time;
+    }
+
 }

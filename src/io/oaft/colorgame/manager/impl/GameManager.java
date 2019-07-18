@@ -1,5 +1,6 @@
 package io.oaft.colorgame.manager.impl;
 
+import io.oaft.colorgame.listeners.PlayerListener;
 import io.oaft.colorgame.manager.Manager;
 import io.oaft.colorgame.manager.ManagerHandler;
 import io.oaft.colorgame.util.CC;
@@ -7,10 +8,16 @@ import io.oaft.colorgame.util.GameState;
 import io.oaft.colorgame.util.Timer;
 import io.oaft.colorgame.util.cuboid.Cuboid;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class GameManager extends Manager {
 
@@ -19,6 +26,7 @@ public class GameManager extends Manager {
     private Timer newBlockTimer;
     private ItemStack nextBlock;
     private Cuboid cuboid;
+    private Set<Block> blockSet;
 
     public GameManager(ManagerHandler managerHandler) {
         super(managerHandler);
@@ -38,6 +46,8 @@ public class GameManager extends Manager {
                 200,
                 -50
         );
+        new PlayerListener(getPlugin());
+        this.blockSet = new HashSet<>();
     }
 
     public void startGame() {
@@ -45,14 +55,13 @@ public class GameManager extends Manager {
         this.gameState = GameState.PRE_GAME;
         getScheduler().runTaskTimerAsynchronously(getPlugin(), () -> {
             if (this.gameState == GameState.PRE_GAME) {
-                for (int i = 0; i < this.startingTimer.getSeconds(); i++) {
-                    if (i != 0) {
-                        getPlugin().getServer().broadcastMessage(CC.GOLD + "Game starting in " + i + " seconds.");
-                    } else {
-                        getPlugin().getServer().broadcastMessage(CC.GOLD + "Game starting now.");
-                        this.doGame();
-                        this.startingTimer.stop();
-                    }
+                int i = this.startingTimer.getSeconds();
+                if (i >= 1) {
+                    getPlugin().getServer().broadcastMessage(CC.GOLD + "Game starting in " + i + " seconds.");
+                } else {
+                    getPlugin().getServer().broadcastMessage(CC.GOLD + "Game starting now.");
+                    this.doGame();
+                    this.startingTimer.stop();
                 }
             }
         }, 0L, 20L);
@@ -60,11 +69,11 @@ public class GameManager extends Manager {
 
     private void doGame() {
         this.gameState = GameState.IN_GAME;
-        this.nextBlock = new ItemStack(Material.WOOL, 1, (short) 14);
+        this.nextBlock = new ItemStack(Material.STAINED_GLASS, 1, (short) 14);
         getScheduler().runTaskTimerAsynchronously(getPlugin(), () -> {
             if (this.gameState == GameState.IN_GAME) {
                 int i = this.newBlockTimer.getSeconds();
-                if (i != 0) {
+                if (i >= 1) {
                     for (Player all : Bukkit.getOnlinePlayers()) {
                         all.getInventory().setItem(0, new ItemStack(nextBlock));
                     }
@@ -75,25 +84,22 @@ public class GameManager extends Manager {
                     }
                     this.newBlockTimer.stop();
                     for (Block block : this.cuboid) {
-                        if (block.getTypeId() == this.nextBlock.getTypeId()) {
+                        if (block.getType() == this.nextBlock.getType()) {
+                            this.blockSet.add(block);
                             block.setType(Material.AIR);
                         }
+                    }
+                    if (this.nextBlock.getType() == Material.STAINED_GLASS) {
+                        this.nextBlock = new ItemStack(Material.WOOL, 1, (short) 5);
+                    } else {
+                        this.nextBlock = new ItemStack(Material.STAINED_GLASS, 1, (short) 14);
                     }
                 }
             }
         }, 0L, 20L);
         getScheduler().runTaskTimerAsynchronously(getPlugin(), () -> {
             if (this.gameState == GameState.IN_GAME) {
-                switch (nextBlock.getAmount()) {
-                    case 1:
-                        this.nextBlock = new ItemStack(Material.WOOL, 2, (short) 4);
-                    case 2:
-                        this.nextBlock = new ItemStack(Material.WOOL, 3, (short) 5);
-                    case 3:
-                        this.nextBlock = new ItemStack(Material.WOOL, 4, (short) 3);
-                    default:
-                        this.nextBlock = new ItemStack(Material.WOOL, 1, (short) 14);
-                }
+                this.newBlockTimer.setTime(6);
                 this.newBlockTimer.start();
             }
         }, 0L, 200L);

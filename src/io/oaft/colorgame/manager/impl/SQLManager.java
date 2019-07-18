@@ -23,7 +23,6 @@ public class SQLManager extends Manager {
                 Class.forName("com.mysql.jdbc.Driver");
                 connection = DriverManager.getConnection("jdbc:mysql://" + getPlugin().getConfig().getString("database.sql.host") + ':' + getPlugin().getConfig().getInt("database.sql.port") + '/'
                         + getPlugin().getConfig().getString("database.sql.database"), getPlugin().getConfig().getString("database.sql.username"), getPlugin().getConfig().getString("database.sql.password"));
-                print(CC.AQUA + "[oCore] " + CC.GREEN + "Connected to database " + getPlugin().getConfig().getString("database.sql.database") + '.');
             } catch (SQLException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
