@@ -7,8 +7,10 @@ import io.oaft.colorgame.util.CC;
 import io.oaft.colorgame.util.GameState;
 import io.oaft.colorgame.util.Timer;
 import io.oaft.colorgame.util.cuboid.Cuboid;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.HashSet;
@@ -51,7 +53,7 @@ public class GameManager extends Manager {
         getScheduler().runTaskTimerAsynchronously(getPlugin(), () -> {
             if (this.gameState == GameState.PRE_GAME) {
                 int i = this.startingTimer.getSeconds();
-                if (i >= 1) {
+                if (i != 0) {
                     getPlugin().getServer().broadcastMessage(CC.GOLD + "Game starting in " + i + " seconds.");
                 } else {
                     getPlugin().getServer().broadcastMessage(CC.GOLD + "Game starting now.");
@@ -64,15 +66,15 @@ public class GameManager extends Manager {
 
     private void doGame() {
         this.gameState = GameState.IN_GAME;
-        this.nextBlock = new ItemStack(Material.WOOL, 1, (short) 14);
+        this.nextBlock = new ItemStack(Material.STAINED_GLASS, 1, (short) 5);
         getScheduler().runTaskTimerAsynchronously(getPlugin(), () -> {
-            if(this.newBlockTimer.getSeconds() >= 1) {
+            if(this.newBlockTimer.getSeconds() != 0) {
                 getPlugin().getServer().broadcastMessage(CC.GOLD + "New block in " + this.newBlockTimer.getSeconds() + " seconds.");
             } else {
                 for (Block block : this.cuboid) {
                     if(block.getType() == nextBlock.getType()) {
-                        getScheduler().runTaskLaterAsynchronously(getPlugin(), () -> block.setType(block.getType()), 100L);
                         block.setType(Material.AIR);
+                        getScheduler().runTaskLaterAsynchronously(getPlugin(), () -> block.setType(block.getType()), 100L);
                     }
                 }
                 this.newBlockTimer.stop();
@@ -84,6 +86,7 @@ public class GameManager extends Manager {
             } else {
                 this.nextBlock = new ItemStack(Material.WOOL, 1, (short) 14);
             }
+            this.newBlockTimer.setTime(5);
             this.newBlockTimer.start();
         }, 0L, 200L);
     }
