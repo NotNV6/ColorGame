@@ -48,7 +48,7 @@ public class GameManager extends Manager {
     }
 
     private void doGame() {
-        this.gameState = GameState.IN_GAME;
+        
     }
 
 }
