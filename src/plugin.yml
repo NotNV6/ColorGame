@@ -1,0 +1,4 @@
+name: ColorGame
+main: io.oaft.colorgame.ColorGame
+version: 0.1
+author: oaft
